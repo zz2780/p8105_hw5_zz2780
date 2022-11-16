@@ -121,7 +121,7 @@ I used for loop to produce 5000 datasets with fixed n, mean, and sd.
 output=vector("list", 5000)
 
 for(i in 1:5000){
-  output[[i]]=rnorm(n=30, mean=x, sd=5)
+  output[[i]]=rnorm(n=30, mean=0, sd=5)
 }
 ```
 I created a list called test to record th t.test results of each dataset, combined the list of test as dataframe test_results, and only selected estimate and p-value.
@@ -132,8 +132,75 @@ for(i in 1:5000){
   test[[i]]=broom::tidy(t.test(output[[i]]))
 }
 
+test_results_0=bind_rows(test)%>%
+  select(estimate, p.value)%>%
+  mutate(
+    true_mean=0
+  )
+```
+
+I wrote a for loop outside the simulation of 5000 datasets for each true mean (1 to 6), and the final dataframe containing the estimates, p-value, and the true mean of each dataset. 
+```{r}
+test_results_total=data.frame()
+for (a in 1:6){
+  output=vector("list", 5000)
+  test=vector("list", 5000)
+for(i in 1:5000){
+  output[[i]]=rnorm(n=30, mean=a, sd=5)
+}
+for(i in 1:5000){
+  test[[i]]=broom::tidy(t.test(output[[i]]))
+}
 test_results=bind_rows(test)%>%
-  select(estimate, p.value)
+  select(estimate, p.value)%>%
+  mutate(
+    true_mean=a
+  )
+test_results_total=rbind(test_results_total,test_results)
+}
+
+test_results_total
+```
+
+I combined the test results for mean=0 with mean of 1 to 6, created a new variable rejected to distinguish those the null was rejected (p-value<0.05) from those the null was not rejected (p-value>=0.05). I grouped the dataset by true mean and rejected, calculated the frequency of each proportion. Because we only want to see the proportion of times the null was rejected, I filtered out rejected==No, and produced a line graph to show the association between the proportion of times the null was rejected and the true value of mu. 
+
+I observed that the larger the effect size, the higher the power is. 
+```{r}
+test_results_0_to_6<-rbind(test_results_0, test_results_total)
+test_results_0_to_6%>%
+  mutate(
+    rejected=case_when(p.value<0.05 ~ "Yes",
+                       TRUE~"No")
+  )%>%
+  group_by(true_mean, rejected)%>%
+  summarize(n=n())%>%
+  mutate(freq=n/sum(n))%>%
+  filter(rejected=="Yes")%>%
+  ggplot(aes(x=true_mean, y=freq))+
+  geom_line()+
+  labs(x="True Mean", y="Power")
+```
+
+I first created a sub-dataset with only those the null is rejected, and calculated their estimated mean grouping by true mean. Then I modified the original dataset, calculated the total average of estimated mean for each group of true mean, produced a line plot, then added the rejected sample estimate mean as the red line in the graph.
+
+I can observe that the sample average of estimated mean across tests for which the null is rejected are NOT approximately equal to the true value of mean when the true mean has a value of 1, 2, and 3. And their values converge as the true mean value grows larger. 
+```{r}
+test_results_0_to_6_rejected<-test_results_0_to_6%>%
+  mutate(
+    rejected=case_when(p.value<0.05 ~ "Yes",
+                       TRUE~"No")
+  )%>%
+  filter(rejected=="Yes")%>%
+  group_by(true_mean)%>%
+  summarize(avg_total=mean(estimate))
+  
+test_results_0_to_6%>%
+  group_by(true_mean)%>%
+  summarize(avg_total=mean(estimate))%>%
+  ggplot(aes(x=true_mean, y=avg_total))+
+  geom_line()+
+  geom_line(data=test_results_0_to_6_rejected, color="red")+
+  labs(x="True mean", y="Average estimated mean")
 ```
 
 
