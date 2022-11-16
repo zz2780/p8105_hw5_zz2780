@@ -6,6 +6,86 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(p8105.datasets)
+library(viridis)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 6,
+  out.width = "90%"
+)
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
 ```
+
+Problem 1
+Import the data
+```{r}
+full_df = 
+  tibble(
+    files = list.files("data/zip_data/"),
+    path = str_c("data/zip_data/", files)
+  ) %>% 
+  mutate(data = map(path, read_csv)) %>% 
+  unnest()
+```
+Tidy the data
+```{r}
+tidy_df = 
+  full_df %>% 
+  mutate(
+    files = str_replace(files, ".csv", ""),
+    group = str_sub(files, 1, 3)) %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    values_to = "outcome",
+    names_prefix = "week_") %>% 
+  mutate(week = as.numeric(week)) %>% 
+  select(group, subj = files, week, outcome)
+```
+Graph
+
+"This plot suggests high within-subject correlation -- subjects who start above average end up above average, and those that start below average end up below average. Subjects in the control group generally don't change over time, but those in the experiment group increase their outcome in a roughly linear way."
+```{r}
+tidy_df %>% 
+  ggplot(aes(x = week, y = outcome, group = subj, color = group)) + 
+  geom_point() + 
+  geom_path() + 
+  facet_grid(~group)
+```
+Problem 2
+
+Load the data from Github Repo
+```{r}
+data2<-read.csv("https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv")
+```
+
+The raw data contains each homicide's case number, reported date, victims' name, race, age, gender, the city and state of homicide, its specific longitude and latitude, and the disposition.
+
+```{r}
+data2_summary<-data2%>%
+  mutate(
+    city_state=paste(city, state, sep=", "),
+    disposition_new=case_when(disposition=="Closed by arrest" ~ "Solved Homicide",
+                              TRUE~"Unsolved Homicide"))%>%
+  group_by(city_state)%>%
+ count(disposition_new)
+
+data2_summary
+```
+
+
+
 
