@@ -114,6 +114,28 @@ ggplot(data2_prop_test, aes(x =reorder(city_state, desc(estimate)), y = estimate
   labs(x="City, State", y = "Proportion of Unsolved Homicide",title="Proportion of Unsolved Homicide in Each City")
 ```
 
+Problem 3
+
+I used for loop to produce 5000 datasets with fixed n, mean, and sd.
+```{r}
+output=vector("list", 5000)
+
+for(i in 1:5000){
+  output[[i]]=rnorm(n=30, mean=x, sd=5)
+}
+```
+I created a list called test to record th t.test results of each dataset, combined the list of test as dataframe test_results, and only selected estimate and p-value.
+```{r}
+test=vector("list", 5000)
+
+for(i in 1:5000){
+  test[[i]]=broom::tidy(t.test(output[[i]]))
+}
+
+test_results=bind_rows(test)%>%
+  select(estimate, p.value)
+```
+
 
 
 
