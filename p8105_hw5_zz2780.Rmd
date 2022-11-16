@@ -74,16 +74,34 @@ data2<-read.csv("https://raw.githubusercontent.com/washingtonpost/data-homicides
 
 The raw data contains each homicide's case number, reported date, victims' name, race, age, gender, the city and state of homicide, its specific longitude and latitude, and the disposition.
 
+The code below created variables city_state, grouped by cities and summarized the number of total or unsolved homicides within each city.
 ```{r}
 data2_summary<-data2%>%
   mutate(
-    city_state=paste(city, state, sep=", "),
-    disposition_new=case_when(disposition=="Closed by arrest" ~ "Solved Homicide",
-                              TRUE~"Unsolved Homicide"))%>%
+    city_state=paste(city, state, sep=", "))%>%
   group_by(city_state)%>%
- count(disposition_new)
+ summarize(total=n(),
+           unsolved=sum(disposition!="Closed by arrest"))
 
 data2_summary
+```
+I subset the data summary to only city of Baltimore, ran the proportional test, and stored the prop test result as dataframe bal.test.
+```{r}
+baltimore<-data2_summary%>%
+  subset(city_state=="Baltimore, MD")
+bal.test<-broom::tidy(prop.test(baltimore$unsolved, baltimore$total))
+```
+
+I ran prop.test on every city, stored the test results in new variable test, and extract estimates and 95%CI from the test variable. Finally I deleted test variable for tidy purpose.
+```{r}
+data2_summary%>%
+  mutate(
+    test=purrr::map2(unsolved, total, prop.test),
+    estimate=map_dbl(test,~.x[["estimate"]]),
+    ci_lower=map_dbl(test,~.x[["conf.int"]][1]),
+    ci_upper=map_dbl(test,~.x[["conf.int"]][2])
+    )%>%
+  select(-test)
 ```
 
 
