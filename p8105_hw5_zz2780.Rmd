@@ -94,7 +94,7 @@ bal.test<-broom::tidy(prop.test(baltimore$unsolved, baltimore$total))
 
 I ran prop.test on every city, stored the test results in new variable test, and extract estimates and 95%CI from the test variable. Finally I deleted test variable for tidy purpose.
 ```{r}
-data2_summary%>%
+data2_prop_test<-data2_summary%>%
   mutate(
     test=purrr::map2(unsolved, total, prop.test),
     estimate=map_dbl(test,~.x[["estimate"]]),
@@ -102,7 +102,18 @@ data2_summary%>%
     ci_upper=map_dbl(test,~.x[["conf.int"]][2])
     )%>%
   select(-test)
+
+data2_prop_test
 ```
+The bar plot below shows, in descending order, the proportion of unsolved homicides in each city as well as each 95% CI.
+```{r}
+ggplot(data2_prop_test, aes(x =reorder(city_state, desc(estimate)), y = estimate)) +
+  geom_bar(stat="identity")+
+  geom_errorbar(width=.1, aes(ymin=ci_lower,ymax=ci_upper),position=position_dodge(width=0.5))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  labs(x="City, State", y = "Proportion of Unsolved Homicide",title="Proportion of Unsolved Homicide in Each City")
+```
+
 
 
 
