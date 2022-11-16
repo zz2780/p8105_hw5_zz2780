@@ -29,7 +29,7 @@ scale_fill_discrete = scale_fill_viridis_d
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 ```
 
-#Problem 1
+# Problem 1
 
 Import the data
 ```{r}
@@ -66,7 +66,8 @@ tidy_df %>%
   geom_path() + 
   facet_grid(~group)
 ```
-#Problem 2
+
+# Problem 2
 
 Load the data from Github Repo
 ```{r}
@@ -115,29 +116,30 @@ ggplot(data2_prop_test, aes(x =reorder(city_state, desc(estimate)), y = estimate
   labs(x="City, State", y = "Proportion of Unsolved Homicide",title="Proportion of Unsolved Homicide in Each City")
 ```
 
-#Problem 3
+# Problem 3
 
 I used for loop to produce 5000 datasets with fixed n, mean, and sd.
 ```{r}
-output=vector("list", 5000)
+output0=vector("list", 5000)
 
 for(i in 1:5000){
-  output[[i]]=rnorm(n=30, mean=0, sd=5)
+  output0[[i]]=rnorm(n=30, mean=0, sd=5)
 }
 ```
 I created a list called test to record th t.test results of each dataset, combined the list of test as dataframe test_results, and only selected estimate and p-value.
 ```{r}
-test=vector("list", 5000)
+test0=vector("list", 5000)
 
 for(i in 1:5000){
-  test[[i]]=broom::tidy(t.test(output[[i]]))
+  test0[[i]]=broom::tidy(t.test(output0[[i]]))
 }
 
-test_results_0=bind_rows(test)%>%
+test_results_0=bind_rows(test0)%>%
   select(estimate, p.value)%>%
   mutate(
     true_mean=0
   )
+test_results_0
 ```
 
 I wrote a for loop outside the simulation of 5000 datasets for each true mean (1 to 6), and the final dataframe containing the estimates, p-value, and the true mean of each dataset. 
