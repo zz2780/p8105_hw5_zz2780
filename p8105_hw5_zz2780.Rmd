@@ -29,7 +29,8 @@ scale_fill_discrete = scale_fill_viridis_d
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 ```
 
-Problem 1
+#Problem 1
+
 Import the data
 ```{r}
 full_df = 
@@ -65,7 +66,7 @@ tidy_df %>%
   geom_path() + 
   facet_grid(~group)
 ```
-Problem 2
+#Problem 2
 
 Load the data from Github Repo
 ```{r}
@@ -114,7 +115,7 @@ ggplot(data2_prop_test, aes(x =reorder(city_state, desc(estimate)), y = estimate
   labs(x="City, State", y = "Proportion of Unsolved Homicide",title="Proportion of Unsolved Homicide in Each City")
 ```
 
-Problem 3
+#Problem 3
 
 I used for loop to produce 5000 datasets with fixed n, mean, and sd.
 ```{r}
@@ -202,8 +203,6 @@ test_results_0_to_6%>%
   geom_line(data=test_results_0_to_6_rejected, color="red")+
   labs(x="True mean", y="Average estimated mean")
 ```
-
-
 
 
 
